@@ -9,6 +9,8 @@ import javax.annotation.CheckForNull;
 import org.apache.commons.lang.StringUtils;
 import org.jvnet.localizer.LocaleProvider;
 
+import jenkins.model.Jenkins;
+
 import hudson.model.Hudson;
 
 import hudson.plugins.analysis.util.model.AbstractAnnotation;
@@ -303,7 +305,7 @@ public class Bug extends AbstractAnnotation {
     }
 
     private String getImage(final String image) {
-        Hudson hudson = Hudson.getInstance();
+        Jenkins hudson = Jenkins.getInstance();
         String rootUrl;
         if (hudson == null) {
             rootUrl = StringUtils.EMPTY;

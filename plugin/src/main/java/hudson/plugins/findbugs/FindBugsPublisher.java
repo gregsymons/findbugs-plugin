@@ -4,16 +4,19 @@ import java.io.IOException;
 
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.matrix.MatrixAggregator;
 import hudson.matrix.MatrixBuild;
 
 import hudson.model.Action;
 import hudson.model.BuildListener;
-import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.plugins.analysis.core.FilesParser;
 import hudson.plugins.analysis.core.HealthAwarePublisher;
 import hudson.plugins.analysis.core.ParserResult;
@@ -35,16 +38,16 @@ public class FindBugsPublisher extends HealthAwarePublisher {
     private static final String MAVEN_DEFAULT_PATTERN = "**/findbugsXml.xml";
 
     /** Ant file-set pattern of files to work with. */
-    private final String pattern;
+    private String pattern = ANT_DEFAULT_PATTERN;
 
     /** Determines whether to use the rank when evaluation the priority. @since 4.26 */
-    private final boolean isRankActivated;
+    private boolean isRankActivated = true;
 
     /** RegEx patterns of files to exclude from the report. */
-    private final String excludePattern;
+    private String excludePattern = StringUtils.EMPTY;
 
     /** RegEx patterns of files to include in the report. */
-    private final String includePattern;
+    private String includePattern = StringUtils.EMPTY;
 
     /**
      * Creates a new instance of {@link FindBugsPublisher}.
@@ -120,7 +123,6 @@ public class FindBugsPublisher extends HealthAwarePublisher {
      */
     // CHECKSTYLE:OFF
     @SuppressWarnings("PMD.ExcessiveParameterList")
-    @DataBoundConstructor
     public FindBugsPublisher(final String healthy, final String unHealthy, final String thresholdLimit,
             final String defaultEncoding, final boolean useDeltaValues,
             final String unstableTotalAll, final String unstableTotalHigh, final String unstableTotalNormal, final String unstableTotalLow,
@@ -141,6 +143,32 @@ public class FindBugsPublisher extends HealthAwarePublisher {
         this.includePattern= includePattern;
     }
     // CHECKSTYLE:ON
+
+    @DataBoundConstructor
+    public FindBugsPublisher() {
+        super(PLUGIN_NAME);
+        setCanResolveRelativePaths(false);
+    }
+
+    @DataBoundSetter
+    public void setPattern(final String pattern) {
+        this.pattern = pattern;
+    }
+
+    @DataBoundSetter
+    public void setIsRankActivated(final boolean isRankActivated) {
+        this.isRankActivated = isRankActivated;
+    }
+
+    @DataBoundSetter
+    public void setExcludePattern(final String excludePattern) {
+        this.excludePattern = excludePattern;
+    }
+
+    @DataBoundSetter
+    public void setIncludePattern(final String includePattern) {
+        this.includePattern = includePattern;
+    }
 
     /**
      * Returns whether to use the rank when evaluation the priority.
@@ -186,13 +214,13 @@ public class FindBugsPublisher extends HealthAwarePublisher {
     }
 
     @Override
-    public BuildResult perform(final AbstractBuild<?, ?> build, final PluginLogger logger) throws InterruptedException, IOException {
+    public BuildResult perform(final Run<?, ?> build, final FilePath workspace, final TaskListener listener, final PluginLogger logger) throws InterruptedException, IOException {
         logger.log("Collecting findbugs analysis files...");
 
         String defaultPattern = isMavenBuild(build) ? MAVEN_DEFAULT_PATTERN : ANT_DEFAULT_PATTERN;
         FilesParser collector = new FilesParser(PLUGIN_NAME, StringUtils.defaultIfEmpty(getPattern(), defaultPattern),
                 new FindBugsParser(isRankActivated, getExcludePattern(), getIncludePattern()), shouldDetectModules(), isMavenBuild(build));
-        ParserResult project = build.getWorkspace().act(collector);
+        ParserResult project = workspace.act(collector);
         logger.logLines(project.getLogMessages());
         FindBugsResult result = new FindBugsResult(build, getDefaultEncoding(), project,
                 usePreviousBuildAsReference(), useOnlyStableBuildsAsReference());

@@ -1,6 +1,8 @@
 package hudson.plugins.findbugs;
 
 import hudson.model.AbstractProject;
+import hudson.model.Job;
+import hudson.model.Run;
 import hudson.plugins.analysis.core.ResultAction;
 import hudson.plugins.analysis.core.AbstractProjectAction;
 import hudson.plugins.analysis.graph.BuildResultGraph;
@@ -35,7 +37,7 @@ public class FindBugsProjectAction extends AbstractProjectAction<ResultAction<Fi
      * @param type
      *            the result action type
      */
-    public FindBugsProjectAction(final AbstractProject<?, ?> project,
+    public FindBugsProjectAction(final Job<?, ?> project,
             final Class<? extends ResultAction<FindBugsResult>> type) {
         super(project, type, Messages._FindBugs_ProjectAction_Name(), Messages._FindBugs_Trend_Name(),
                 FindBugsDescriptor.PLUGIN_ID, FindBugsDescriptor.ICON_URL, FindBugsDescriptor.RESULT_URL);

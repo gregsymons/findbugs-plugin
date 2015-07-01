@@ -1,6 +1,13 @@
 package hudson.plugins.findbugs;
 
+import java.util.Collection;
+import java.util.Collections;
+
+import jenkins.tasks.SimpleBuildStep;
+
 import hudson.model.AbstractBuild;
+import hudson.model.Action;
+import hudson.model.Run;
 import hudson.plugins.analysis.core.HealthDescriptor;
 import hudson.plugins.analysis.core.PluginDescriptor;
 import hudson.plugins.analysis.core.AbstractResultAction;
@@ -16,18 +23,16 @@ import hudson.plugins.analysis.core.AbstractResultAction;
  *
  * @author Ulli Hafner
  */
-public class FindBugsResultAction extends AbstractResultAction<FindBugsResult> {
+public class FindBugsResultAction extends AbstractResultAction<FindBugsResult> implements SimpleBuildStep.LastBuildAction {
     /**
      * Creates a new instance of {@link FindBugsResultAction}.
-     *
-     * @param owner
+     *  @param owner
      *            the associated build of this action
      * @param healthDescriptor
      *            health descriptor to use
      * @param result
-     *            the result in this build
      */
-    public FindBugsResultAction(final AbstractBuild<?, ?> owner, final HealthDescriptor healthDescriptor, final FindBugsResult result) {
+    public FindBugsResultAction(final Run<?, ?> owner, final HealthDescriptor healthDescriptor, final FindBugsResult result) {
         super(owner, new FindBugsHealthDescriptor(healthDescriptor), result);
     }
 
@@ -39,5 +44,10 @@ public class FindBugsResultAction extends AbstractResultAction<FindBugsResult> {
     @Override
     protected PluginDescriptor getDescriptor() {
         return new FindBugsDescriptor();
+    }
+
+    @Override
+    public Collection<? extends Action> getProjectActions() {
+        return Collections.singleton(new FindBugsProjectAction(getOwner().getParent(), FindBugsResultAction.class));
     }
 }
